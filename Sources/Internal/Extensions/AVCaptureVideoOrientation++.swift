@@ -13,7 +13,7 @@ import SwiftUI
 import AVKit
 
 // MARK: To Angle
-extension AVCaptureVideoOrientation {
+public extension AVCaptureVideoOrientation {
     func getAngle() -> Angle { switch self {
         case .portrait: .degrees(0)
         case .landscapeLeft: .degrees(-90)

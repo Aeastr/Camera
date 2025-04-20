@@ -104,10 +104,25 @@ public struct MCamera: View {
 }
 private extension MCamera {
     @ViewBuilder func createContent() -> some View {
-        if let error = manager.attributes.error { createErrorScreen(error) }
-        else if let capturedMedia = manager.attributes.capturedMedia, config.capturedMediaScreen != nil { createCapturedMediaScreen(capturedMedia) }
-        else { createCameraScreen() }
-    }
+           // Prioritize showing the error screen exclusively
+           if let error = manager.attributes.error {
+               createErrorScreen(error)
+           } else {
+               // Use a ZStack for layering the camera and captured media views
+               ZStack {
+                   // The camera screen is always the base layer
+                   createCameraScreen()
+
+                   // Conditionally overlay the captured media screen
+                   if let capturedMedia = manager.attributes.capturedMedia,
+                      config.capturedMediaScreen != nil
+                   {
+                       createCapturedMediaScreen(capturedMedia)
+                           // Optional: Add a transition for a smoother appearance
+                   }
+               }
+           }
+       }
 }
 private extension MCamera {
     func createErrorScreen(_ error: MCameraError) -> some View {
