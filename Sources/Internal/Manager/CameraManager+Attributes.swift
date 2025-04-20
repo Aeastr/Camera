@@ -11,13 +11,13 @@
 
 import AVKit
 
-struct CameraManagerAttributes {
-    var capturedMedia: MCameraMedia? = nil
+public struct CameraManagerAttributes {
+    public var capturedMedia: MCameraMedia? = nil
     var error: MCameraError? = nil
 
     var outputType: CameraOutputType = .photo
     var cameraPosition: CameraPosition = .back
-    var isAudioSourceAvailable: Bool = true
+    public var isAudioSourceAvailable: Bool = false
     var zoomFactor: CGFloat = 1.0
     var flashMode: CameraFlashMode = .off
     var lightMode: CameraLightMode = .off

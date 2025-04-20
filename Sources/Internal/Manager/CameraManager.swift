@@ -13,7 +13,7 @@ import SwiftUI
 import AVKit
 
 @MainActor public class CameraManager: NSObject, ObservableObject {
-    @Published var attributes: CameraManagerAttributes = .init()
+    @Published public var attributes: CameraManagerAttributes = .init()
 
     // MARK: Input
     private(set) var captureSession: any CaptureSession
@@ -36,7 +36,7 @@ import AVKit
     private(set) var notificationCenterManager: CameraManagerNotificationCenter = .init()
 
     // MARK: Initializer
-    init<CS: CaptureSession, CDI: CaptureDeviceInput>(captureSession: CS, captureDeviceInputType: CDI.Type) {
+    public init<CS: CaptureSession, CDI: CaptureDeviceInput>(captureSession: CS, captureDeviceInputType: CDI.Type) {
         self.captureSession = captureSession
         self.frontCameraInput = CDI.get(mediaType: .video, position: .front)
         self.backCameraInput = CDI.get(mediaType: .video, position: .back)
@@ -45,13 +45,13 @@ import AVKit
 
 // MARK: Initialize
 extension CameraManager {
-    func initialize(in view: UIView) {
+    public func initialize(in view: UIView) {
         cameraView = view
     }
 }
 
 // MARK: Setup
-extension CameraManager {
+public extension CameraManager {
     func setup() async throws(MCameraError) {
         try await permissionsManager.requestAccess(parent: self)
 
@@ -67,7 +67,7 @@ extension CameraManager {
         startSession()
     }
 }
-private extension CameraManager {
+public extension CameraManager {
     func setupCameraLayer() {
         captureSession.sessionPreset = attributes.resolution
 
@@ -140,7 +140,7 @@ extension CameraManager {
 
 
 // MARK: Capture Output
-extension CameraManager {
+public extension CameraManager {
     func captureOutput() {
         guard !isChanging else { return }
 
@@ -167,8 +167,8 @@ extension CameraManager {
 }
 
 // MARK: Set Camera Position
-extension CameraManager {
-    func setCameraPosition(_ position: CameraPosition) async throws {
+public extension CameraManager {
+    public func setCameraPosition(_ position: CameraPosition) async throws {
         guard position != attributes.cameraPosition, !isChanging else { return }
 
         await cameraMetalView.beginCameraFlipAnimation()

@@ -11,7 +11,7 @@
 
 import AVKit
 
-protocol CaptureDevice: NSObject {
+public protocol CaptureDevice: NSObject {
     // MARK: Getters
     var uniqueID: String { get }
     var exposureDuration: CMTime { get }

@@ -11,19 +11,24 @@
 
 import SwiftUI
 
-struct CameraBridgeView: UIViewRepresentable {
+public struct CameraBridgeView: UIViewRepresentable {
     let cameraManager: CameraManager
     let inputView: UIView = .init()
+    
+    /// Public initializer for external use
+    public init(cameraManager: CameraManager) {
+        self.cameraManager = cameraManager
+    }
 }
 extension CameraBridgeView {
-    func makeUIView(context: Context) -> some UIView {
+    public func makeUIView(context: Context) -> some UIView {
         cameraManager.initialize(in: inputView)
         setupTapGesture(context)
         setupPinchGesture(context)
         return inputView
     }
-    func updateUIView(_ uiView: UIViewType, context: Context) {}
-    func makeCoordinator() -> Coordinator { .init(self) }
+    public func updateUIView(_ uiView: UIViewType, context: Context) {}
+    public func makeCoordinator() -> Coordinator { .init(self) }
 }
 private extension CameraBridgeView {
     func setupTapGesture(_ context: Context) {
@@ -38,12 +43,12 @@ private extension CameraBridgeView {
 
 // MARK: Equatable
 extension CameraBridgeView: Equatable {
-    nonisolated static func ==(lhs: Self, rhs: Self) -> Bool { true }
+    nonisolated public static func ==(lhs: Self, rhs: Self) -> Bool { true }
 }
 
 
 // MARK: - GESTURES
-extension CameraBridgeView { class Coordinator: NSObject { init(_ parent: CameraBridgeView) { self.parent = parent }
+extension CameraBridgeView { public class Coordinator: NSObject { init(_ parent: CameraBridgeView) { self.parent = parent }
     let parent: CameraBridgeView
 }}
 

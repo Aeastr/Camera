@@ -11,7 +11,7 @@
 
 import AVKit
 
-protocol CaptureSession: Sendable {
+public protocol CaptureSession: Sendable {
     // MARK: Attributes
     var isRunning: Bool { get }
     var deviceInputs: [any CaptureDeviceInput] { get }

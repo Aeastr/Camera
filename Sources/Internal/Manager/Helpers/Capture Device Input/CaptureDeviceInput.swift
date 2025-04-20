@@ -6,12 +6,12 @@
 //    - GitHub: https://github.com/FulcrumOne
 //    - Medium: https://medium.com/@mijick
 //
-//  Copyright ©2024 Mijick. All rights reserved.
+//  Copyright 2024 Mijick. All rights reserved.
 
 
 import AVKit
 
-protocol CaptureDeviceInput: NSObject {
+public protocol CaptureDeviceInput: NSObject {
     // MARK: Attributes
     associatedtype CD: CaptureDevice
     var device: CD { get }

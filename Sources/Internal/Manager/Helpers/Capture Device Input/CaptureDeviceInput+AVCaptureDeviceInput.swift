@@ -12,7 +12,7 @@
 import AVKit
 
 extension AVCaptureDeviceInput: CaptureDeviceInput {
-    static func get(mediaType: AVMediaType, position: AVCaptureDevice.Position?) -> Self? {
+    public static func get(mediaType: AVMediaType, position: AVCaptureDevice.Position?) -> Self? {
         let device = { switch mediaType {
             case .audio: AVCaptureDevice.default(for: .audio)
             case .video where position == .front: AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)

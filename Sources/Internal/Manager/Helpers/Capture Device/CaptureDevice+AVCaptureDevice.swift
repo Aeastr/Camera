@@ -13,21 +13,21 @@ import AVKit
 
 // MARK: Getters
 extension AVCaptureDevice: CaptureDevice {
-    var minExposureDuration: CMTime { activeFormat.minExposureDuration }
-    var maxExposureDuration: CMTime { activeFormat.maxExposureDuration }
-    var minISO: Float { activeFormat.minISO }
-    var maxISO: Float { activeFormat.maxISO }
-    var minFrameRate: Float64? { activeFormat.videoSupportedFrameRateRanges.first?.minFrameRate }
-    var maxFrameRate: Float64? { activeFormat.videoSupportedFrameRateRanges.first?.maxFrameRate }
+    public var minExposureDuration: CMTime { activeFormat.minExposureDuration }
+    public var maxExposureDuration: CMTime { activeFormat.maxExposureDuration }
+    public var minISO: Float { activeFormat.minISO }
+    public var maxISO: Float { activeFormat.maxISO }
+    public var minFrameRate: Float64? { activeFormat.videoSupportedFrameRateRanges.first?.minFrameRate }
+    public var maxFrameRate: Float64? { activeFormat.videoSupportedFrameRateRanges.first?.maxFrameRate }
 }
 
 // MARK: Getters & Setters
 extension AVCaptureDevice {
-    var lightMode: CameraLightMode {
+    public var lightMode: CameraLightMode {
         get { torchMode == .off ? .off : .on }
         set { torchMode = newValue == .off ? .off : .on }
     }
-    var hdrMode: CameraHDRMode {
+    public var hdrMode: CameraHDRMode {
         get {
             if automaticallyAdjustsVideoHDREnabled { return .auto }
             else if isVideoHDREnabled { return .on }
