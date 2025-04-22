@@ -13,6 +13,7 @@ import AVKit
 
 public struct CameraManagerAttributes {
     public var capturedMedia: MCameraMedia? = nil
+    public var capturedProcessedMedia: MCameraMedia? = nil
     var error: MCameraError? = nil
 
     var outputType: CameraOutputType = .photo
