@@ -126,11 +126,20 @@ private extension CameraManager {
 
 // MARK: Cancel
 extension CameraManager {
+    /// Stops camera session off main thread to avoid UI stutter.
     func cancel() {
-        captureSession = captureSession.stopRunningAndReturnNewInstance()
+        // Reset non-session resources immediately
         motionManager.reset()
         videoOutput.reset()
         notificationCenterManager.reset()
+        // Stop and recreate session in background
+        let oldSession = captureSession
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let newSession = oldSession.stopRunningAndReturnNewInstance()
+            Task { @MainActor in
+                self?.captureSession = newSession
+            }
+        }
     }
 }
 

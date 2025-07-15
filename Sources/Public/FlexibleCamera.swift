@@ -11,7 +11,7 @@ public protocol FlexibleCameraView: View {
     var namespace: Namespace.ID { get }
     /// Configuration options.
     var config: FlexibleCameraConfig { get }
-
+    
     /// Called by the RawCamera host to construct the view.
     init(
         manager: CameraManager,
@@ -93,10 +93,14 @@ public struct FlexibleCameraConfig {
     public var onImageCaptured: ((UIImage, RawCameraController) -> Void)? = nil
     /// Called when capture is confirmed, passing original and processed images.
     public var onCaptureConfirmed: ((UIImage, RawCameraController) -> Void)? = nil
+    /// Called when camera manager and controller are ready for external use.
+    public var onCameraReady: ((CameraManager, RawCameraController) -> Void)? = nil
     /// Whether audio should be available.
     public var isAudioAvailable: Bool = true
     /// Default output type (photo/video).
     public var outputType: CameraOutputType = .photo
+    /// Indicates if startSession() was called to configure the camera
+    public var isCameraConfigured: Bool = false
     /// Optional custom view builder for captured media (original + processed).
     public var capturedMediaView: ((MCameraMedia, RawCameraController) -> AnyView)? = nil
     /// Optional custom view builder for camera feed.
@@ -111,37 +115,37 @@ public struct FlexibleCameraConfig {
     private let config: FlexibleCameraConfig
     /// Last processed image provided on accept.
     private var processedImage: UIImage? = nil
-
+    
     init(manager: CameraManager, config: FlexibleCameraConfig) {
         self.manager = manager
         self.config = config
     }
-
+    
     /// Trigger a capture (photo or video toggle) on the main actor.
     public func capture() {
         Task { @MainActor in
             manager.captureOutput()
         }
     }
-
+    
     /// Discards the current capture and restarts session on the main actor.
     public func retake() {
         Task { @MainActor in
             manager.setCapturedMedia(nil)
-//            try? await manager.setup()
-//            manager.startSession()
+            //            try? await manager.setup()
+            //            manager.startSession()
         }
     }
-
+    
     /// Accept the current capture, optionally supplying a processed image.
     public func accept() {
         guard let original = manager.attributes.capturedMedia?.getImage() else { return }
         // original callback
-//        config.onImageCaptured?(original, self)
+        //        config.onImageCaptured?(original, self)
         // confirmed with processed
         config.onCaptureConfirmed?(original, self)
     }
-
+    
     /// The live preview and captured-media overlay.
     @ViewBuilder public func cameraOutputView(namespace: Namespace.ID) -> some View {
         if let feedBuilder = config.cameraFeedView {
@@ -210,62 +214,76 @@ public struct FlexibleCamera<Screen: FlexibleCameraView>: View {
     @Namespace private var namespace
     private var screenType: Screen.Type
     private var config: FlexibleCameraConfig
-
+    
     /// Start with your custom screen type.
     public init(screen: Screen.Type = Screen.self) {
         self.screenType = screen
         self.config = FlexibleCameraConfig()
     }
-
+    
     /// Called when an image is captured.
     public func onImageCaptured(_ callback: @escaping (UIImage, RawCameraController) -> Void) -> FlexibleCamera {
         var copy = self
         copy.config.onImageCaptured = callback
         return copy
     }
-
+    
     /// Called when capture is confirmed; provides original and processed images.
     public func onCaptureConfirmed(_ callback: @escaping (UIImage, RawCameraController) -> Void) -> FlexibleCamera {
         var copy = self
         copy.config.onCaptureConfirmed = callback
         return copy
     }
-
+    
+    /// Called when camera manager and controller are ready for external use.
+    public func onCameraReady(_ callback: @escaping (CameraManager, RawCameraController) -> Void) -> FlexibleCamera {
+        var copy = self
+        copy.config.onCameraReady = callback
+        return copy
+    }
+    
     /// Enable or disable audio support.
     public func setAudioAvailability(_ value: Bool) -> FlexibleCamera {
         var copy = self
         copy.config.isAudioAvailable = value
         return copy
     }
-
+    
     /// Choose .photo or .video.
     public func setCameraOutputType(_ type: CameraOutputType) -> FlexibleCamera {
         var copy = self
         copy.config.outputType = type
         return copy
     }
-
+    
     /// Provide a custom view for captured media overlay.
     public func setCapturedMediaView<Content: View>(@ViewBuilder _ builder: @escaping (MCameraMedia, RawCameraController) -> Content) -> FlexibleCamera {
         var copy = self
         copy.config.capturedMediaView = { media, controller in AnyView(builder(media, controller)) }
         return copy
     }
-
+    
     /// Provide a custom view for the camera feed.
     public func setCameraFeedView<Content: View>(@ViewBuilder _ builder: @escaping (CameraManager, RawCameraController, Namespace.ID) -> Content) -> FlexibleCamera {
         var copy = self
         copy.config.cameraFeedView = { manager, controller, namespace in AnyView(builder(manager, controller, namespace)) }
         return copy
     }
-
+    
     /// Provide a custom captured-media screen conforming to MCapturedMediaScreen protocol.
     public func setCapturedMediaScreen<Content: MCapturedMediaScreen>(_ builder: @escaping (MCameraMedia, Namespace.ID, @escaping () -> Void, @escaping () -> Void) -> Content) -> FlexibleCamera {
         var copy = self
         copy.config.capturedMediaScreen = { media, namespace, retake, accept in AnyView(builder(media, namespace, retake, accept)) }
         return copy
     }
-
+    
+    /// Starts the camera session. Must be called to begin camera feed.
+    public func startSession() -> FlexibleCamera<Screen> {
+        var copy = self
+        copy.config.isCameraConfigured = true
+        return copy
+    }
+    
     /// Build the custom screen view.
     public func createCameraOutputView() -> some View {
         screenType.init(
@@ -275,14 +293,26 @@ public struct FlexibleCamera<Screen: FlexibleCameraView>: View {
             config: config
         )
     }
-
+    
     public var body: some View {
-        createCameraOutputView()
-            .onAppear {
-                Task {
-                    try? await manager.setup()
-                    manager.startSession()
-                }
+        Group {
+            if config.isCameraConfigured {
+                createCameraOutputView()
+                    .onAppear {
+                        Task {
+                            try? await manager.setup()
+                            manager.startSession()
+                            
+                            // Notify parent that camera is ready
+                            await MainActor.run {
+                                config.onCameraReady?(manager, RawCameraController(manager: manager, config: config))
+                            }
+                        }
+                    }
+                    .onDisappear {
+                        manager.cancel()
+                    }
             }
         }
+    }
 }
